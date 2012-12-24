@@ -10,7 +10,7 @@ then
 	mkdir $snapshot_dir
 fi
 
-tar vjcf ../$filename ../$project
+tar vjcf ../$filename -X snapshot.ignore ../$project
 mv ../$filename $snapshot_dir
 
 if [ -d $flash_dir ]
