@@ -1,8 +1,0 @@
-#!/usr/bin/escript
-
--define(RelName, "emake-1").
-
-main(_) ->
-	make:all(),
-	systools:make_script(?RelName, [local, {path, ["ebin"]}]),
-	systools:make_tar(?RelName, [{path, ["ebin"]}]).
