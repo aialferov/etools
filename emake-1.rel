@@ -1,0 +1,6 @@
+{release, {"emake_rel", "0.0.1"}, {erts, "5.9"}, [
+	{kernel, "2.15"},
+	{stdlib, "1.18"},
+	{sasl, "2.2.1"},
+	{emake, "0.0.1"}
+]}.
