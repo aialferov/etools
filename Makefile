@@ -6,9 +6,11 @@ clean:
 	rm ebin/emake.beam
 
 install:
-	mkdir -p /usr/local/lib/emake/lib/emake/ebin
-	install ebin/emake.beam /usr/local/emake/lib/emake/ebin
+	mkdir -p /usr/local/lib/emake/ebin
+	install ebin/emake.app /usr/local/lib/emake/ebin
+	install ebin/emake.beam /usr/local/lib/emake/ebin
 
 uninstall:
-	rm /usr/local/lib/emake/lib/emake/ebin/emake.beam
-	rmdir --ignore-fail-on-non-empty -p /usr/local/emake/lib/emake/ebin
+	rm /usr/local/lib/emake/ebin/emake.app
+	rm /usr/local/lib/emake/ebin/emake.beam
+	rmdir --ignore-fail-on-non-empty -p /usr/local/lib/emake/ebin
