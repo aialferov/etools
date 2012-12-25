@@ -36,7 +36,8 @@ all() ->
 
 clean() ->
 	os:cmd("rm -r " ++ ?DepsDir),
-	os:cmd("rm " ++ ?BinDir ++ "/*.beam").
+	os:cmd("rm -f" ++ ?BinDir ++ "/*.beam"),
+	ok.
 
 read_deps() -> lists:reverse([Dep || {_ID, Dep} <- lists:foldl(
 	fun(Dep = {ID, _}, Deps) -> case lists:keyfind(ID, 1, Deps) of
