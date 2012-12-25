@@ -45,13 +45,14 @@ read_deps() -> lists:reverse([Dep || {_ID, Dep} <- lists:foldl(
 	end end, [], lists:flatten(read_deps("."))
 )]).
 
-read_deps(Path) when is_list(Path) ->
-	read_deps(file:consult(filename:join(Path, ?ConfigFile)));
-read_deps({ok, Config}) -> read_deps(lists:keyfind(deps, 1, Config));
-read_deps({deps, Deps}) -> 
-	[read_deps(Dep) || Dep <- Deps] ++
-		[{filename:basename(Dep), Dep} || Dep <- Deps];
-read_deps(false) -> []; read_deps({error, enoent}) -> [].
+read_deps(Path) ->
+	read_deps(file:consult(filename:join(Path, ?ConfigFile)), Path).
+read_deps({ok, Config}, Path) ->
+	read_deps(lists:keyfind(deps, 1, Config), Path);
+read_deps({deps, Deps}, Path) ->
+	[read_deps(filename:absname(Dep, Path)) || Dep <- Deps] ++
+		[{filename:basename(Dep), filename:absname(Dep, Path)} || Dep <- Deps];
+read_deps(false, _) -> []; read_deps({error, enoent}, _) -> [].
 
 build(Path, OutPath, IncludePaths) ->
 	io:format("Building: ~p~n", [Path]),
