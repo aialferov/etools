@@ -31,13 +31,14 @@ all() ->
 		?BinDir]), IncludePaths) || DepPath <- DepPaths],
 	[copy_app(DepPath, filename:join([?DepsDir,
 		filename:basename(DepPath), ?BinDir])) || DepPath <- DepPaths],
-	build(".", ?BinDir, IncludePaths ++ [?IncludeDir]),
-	ok.
+	build(".", ?BinDir, IncludePaths ++ [?IncludeDir]).
 
 clean() ->
-	os:cmd("rm -r " ++ ?DepsDir),
-	os:cmd("rm -f " ++ ?BinDir ++ "/*.beam"),
-	ok.
+	os_cmd("rm -rf " ++ ?DepsDir),
+	os_cmd("rm -f " ++ ?BinDir ++ "/*.beam").
+
+os_cmd(Cmd) -> io:format("~p~n",
+	[{case os:cmd(Cmd) of [] -> ok; X -> X end, Cmd}]).
 
 read_deps() -> lists:reverse([Dep || {_ID, Dep} <- lists:foldl(
 	fun(Dep = {ID, _}, Deps) -> case lists:keyfind(ID, 1, Deps) of
@@ -60,7 +61,7 @@ build(Path, OutPath, IncludePaths) ->
 	{ok, SrcFiles} = file:list_dir(SrcPath),
 	SrcMods = [filename:join(SrcPath, filename:rootname(File)) ||
 		File <- SrcFiles, filename:extension(File) == ?SrcExt],
-	[compile_mod(SrcMod, OutPath, IncludePaths) || SrcMod <- SrcMods].
+	[compile_mod(SrcMod, OutPath, IncludePaths) || SrcMod <- SrcMods], ok.
 
 compile_mod(SrcMod, OutPath, IncludePaths) ->
 	filelib:ensure_dir(OutPath),
