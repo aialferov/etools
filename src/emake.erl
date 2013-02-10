@@ -35,7 +35,8 @@ all() ->
 
 clean() ->
 	os_cmd("rm -rf " ++ ?DepsDir),
-	os_cmd("rm -f " ++ ?BinDir ++ "/*.beam").
+	os_cmd("rm -f " ++ ?BinDir ++ "/*.beam"),
+	os_cmd("rmdir --ignore-fail-on-non-empty " ++ ?BinDir).
 
 os_cmd(Cmd) -> io:format("~p~n",
 	[{case os:cmd(Cmd) of [] -> ok; X -> X end, Cmd}]).
