@@ -73,13 +73,16 @@ compile_mod(SrcMod, OutPath, IncludePaths) ->
 	code:purge(Mod), code:load_file(Mod),
 	io:format(" - ~p~n", [CompileResult]).
 
-copy_app(Path, OutPath) ->
+copy_app(Path, OutPath) when is_list(Path) ->
 	io:format("Copying app: ~p~n", [Path]),
 	BinPath = filename:join(Path, ?BinDir),
-	{ok, BinFiles} = file:list_dir(BinPath),
+	copy_app(file:list_dir(BinPath), BinPath, OutPath).
+copy_app({ok, BinFiles}, BinPath, OutPath) ->
 	AppFiles = [filename:join(BinPath, File) ||
 		File <- BinFiles, filename:extension(File) == ?AppExt],
-	[copy_app_file(AppFile, OutPath) || AppFile <- AppFiles].
+	[copy_app_file(AppFile, OutPath) || AppFile <- AppFiles];
+copy_app({error, Reason}, BinPath, _) ->
+	io:format(" - ~s ~s~n", [file:format_error(Reason), BinPath]).
 
 copy_app_file(AppFile, OutPath) ->
 	filelib:ensure_dir(OutPath),
