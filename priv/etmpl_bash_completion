@@ -1,0 +1,5 @@
+_etmpl() {
+	local cur=${COMP_WORDS[COMP_CWORD]}
+	COMPREPLY=( $(compgen -W "application app srv sup fsm" -- $cur) )
+}
+complete -F _etmpl etmpl

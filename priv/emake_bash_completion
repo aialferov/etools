@@ -1,0 +1,5 @@
+_emake() {
+	local cur=${COMP_WORDS[COMP_CWORD]}
+	COMPREPLY=( $(compgen -W "clean deepclean" -- $cur) )
+}
+complete -F _emake emake
