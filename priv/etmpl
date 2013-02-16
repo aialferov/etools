@@ -1,0 +1,120 @@
+#!/bin/bash
+
+author_full_name=$(getent passwd $(whoami) | \
+	awk -F':' '{ gsub(",", "",$5); print $5 }')
+author_user_host="<$(whoami)@$(hostname)>"
+date=$(date "+%d %b %Y")
+year=$(date "+%Y")
+
+if [ -z $2 ]; then
+	name=$1
+else
+	type=$1
+	name=$2
+fi
+
+header="\
+%%%-------------------------------------------------------------------
+%%% @author $author_full_name $author_user_host
+%%% @copyright (C) $year, $author_full_name
+%%%
+%%% Created: $date by $author_full_name $author_user_host
+%%%-------------------------------------------------------------------
+"
+
+_tmpl="-module($name)."
+
+application_tmpl="\
+{application, $name, [
+	{id, \"$name\"},
+	{vsn, \"0.0.1\"},
+	{description, \"$name description\"},
+	{modules, [
+		$name""_app"",
+		$name""_sup"",
+		$name""_server""
+	]},
+	{registered, [$name""_server""]},
+	{applications, [kernel, stdlib, sasl]},
+	{mod, {$name""_app"", [
+	]}}
+]}."
+
+app_tmpl="\
+-module($name""_app"").
+-behaviour(application).
+
+-export([start/2, stop/1]).
+
+start(_StartType, StartArgs) -> $name""_sup"":start_link(StartArgs).
+stop(_State) -> ok."
+
+sup_tmpl="\
+-module($name""_sup"").
+-behaviour(supervisor).
+
+-export([start_link/1]).
+-export([init/1]).
+
+start_link(Args) -> supervisor:start_link({local, ?MODULE}, ?MODULE, Args).
+
+init(Args) -> {ok, {{one_for_one, 1, 10}, [
+	{$name, {$name""_server"", start_link, Args},
+	permanent, 10, worker, [$name""_server""]}
+]}}."
+
+srv_tmpl="\
+-module($name""_server"").
+-behaviour(gen_server).
+
+-export([start_link/1]).
+
+-export([init/1, terminate/2, code_change/3]).
+-export([handle_call/3, handle_cast/2, handle_info/2]).
+
+start_link(Args) -> gen_server:start_link({local, ?MODULE}, ?MODULE, Args, []).
+
+init(_Args) -> {ok, []}.
+
+handle_call(_Request, _From, State) -> {reply, ok, State}.
+handle_cast(_Msg, State) -> {noreply, State}.
+
+handle_info(_Info, State) -> {noreply, State}.
+
+terminate(_Reason, _State) -> ok.
+code_change(_OldVsn, State, _Extra) -> {ok, State}."
+
+fsm_tmpl="\
+-module($name).
+-behaviour(gen_fsm).
+
+-export([start_link/0]).
+
+-export([init/1, state_name/2, state_name/3, handle_event/3,
+	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
+
+start_link() -> gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+init([]) -> {ok, state_name, []}.
+
+state_name(_Event, State) ->
+    {next_state, state_name, State}.
+
+state_name(_Event, _From, State) -> {reply, ok, state_name, State}.
+
+handle_event(_Event, StateName, State) ->
+    {next_state, StateName, State}.
+
+handle_sync_event(_Event, _From, StateName, State) ->
+	{reply, ok, StateName, State}.
+
+handle_info(_Info, StateName, State) -> {next_state, StateName, State}.
+
+terminate(_Reason, _StateName, _State) -> ok.
+code_change(_OldVsn, StateName, State, _Extra) -> {ok, StateName, State}."
+
+content=$(eval echo \"\$${type}_tmpl\")
+
+echo "\
+$header
+$content"
