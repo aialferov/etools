@@ -6,7 +6,7 @@
 %%%-------------------------------------------------------------------
 
 -module(emake).
--export([all/0, clean/0]).
+-export([all/0, clean/0, deepclean/0]).
 
 -define(ConfigFile, "Emakefile.em").
 
@@ -17,6 +17,7 @@
 -define(BinDir, "ebin").
 -define(SrcDir, "src").
 -define(IncludeDir, "include").
+-define(ExamplesDir, "examples").
 
 -define(CompileOptions(OutDir, IncludeDirs),
 	[report_errors, report_warnings, {outdir, OutDir}] ++
@@ -33,10 +34,17 @@ all() ->
 		filename:basename(DepPath), ?BinDir])) || DepPath <- DepPaths],
 	build(".", ?BinDir, IncludePaths ++ [?IncludeDir]).
 
-clean() ->
-	os_cmd("rm -rf " ++ ?DepsDir),
-	os_cmd("rm -f " ++ ?BinDir ++ "/*.beam"),
-	os_cmd("rmdir --ignore-fail-on-non-empty " ++ ?BinDir).
+clean() -> clean(".").
+
+deepclean() -> deepclean(file:list_dir(?ExamplesDir)).
+deepclean({ok, ExampleDirs}) ->
+	[clean(?ExamplesDir ++ "/" ++ Dir) || Dir <- ExampleDirs];
+deepclean({error, _Reason}) -> ok.
+
+clean(Path) ->
+	os_cmd("rm -rf " ++ Path ++ "/" ++ ?DepsDir),
+	os_cmd("rm -f " ++ Path ++ "/" ++ ?BinDir ++ "/*.beam"),
+	os_cmd("rmdir --ignore-fail-on-non-empty " ++ Path ++ "/" ++ ?BinDir).
 
 os_cmd(Cmd) -> io:format("~p~n",
 	[{case os:cmd(Cmd) of [] -> ok; X -> X end, Cmd}]).

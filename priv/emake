@@ -2,4 +2,5 @@
 %%! -smp enable
 
 main([]) -> emake:all();
-main(["clean"]) -> emake:clean().
+main(["clean"]) -> emake:clean();
+main(["deepclean"]) -> emake:deepclean().
