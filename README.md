@@ -1,8 +1,21 @@
-## Emake
+## Etools
+
+Etools is a set of tools for development using Erlang.
+
+The following tools are provided:
+
+ * etmpl
+ * emake
+
+### Etmpl
+
+Etmpl is a tool for generating Erlang module templates.
+
+### Emake
 
 Emake builds a project with its dependencies.
 
-### Build and install
+## Build and install
 
 1. make
 2. make install
