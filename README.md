@@ -13,7 +13,7 @@ Etmpl is a tool for generating Erlang module templates.
 
 ### Emake
 
-Emake builds a project with its dependencies.
+Emake builds an Erlang project with its dependencies.
 
 ## Build and install
 
