@@ -36,7 +36,7 @@ all() ->
 
 clean() -> clean(".").
 
-deepclean() -> deepclean(file:list_dir(?ExamplesDir)).
+deepclean() -> deepclean(file:list_dir(?ExamplesDir)), clean().
 deepclean({ok, ExampleDirs}) ->
 	[clean(?ExamplesDir ++ "/" ++ Dir) || Dir <- ExampleDirs];
 deepclean({error, _Reason}) -> ok.
