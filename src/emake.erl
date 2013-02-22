@@ -85,7 +85,8 @@ copy_app(Path, OutPath) when is_list(Path) ->
 	BinPath = filename:join(Path, ?BinDir),
 	copy_app(file:list_dir(BinPath), BinPath, OutPath).
 copy_app({ok, BinFiles}, BinPath, OutPath) ->
-	io:format("Copying app: ~p~n", [BinPath]),
+	[_, App|_] = lists:reverse(filename:split(BinPath)),
+	io:format("Copying app: ~p~n", [App]),
 	AppFiles = [filename:join(BinPath, File) ||
 		File <- BinFiles, filename:extension(File) == ?AppExt],
 	[copy_app_file(AppFile, OutPath) || AppFile <- AppFiles];
