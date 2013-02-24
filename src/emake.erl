@@ -60,9 +60,22 @@ read_deps(Path) ->
 read_deps({ok, Config}, Path) ->
 	read_deps(lists:keyfind(deps, 1, Config), Path);
 read_deps({deps, Deps}, Path) ->
-	[read_deps(filename:absname(Dep, Path)) || Dep <- Deps] ++
-		[{filename:basename(Dep), filename:absname(Dep, Path)} || Dep <- Deps];
-read_deps(false, _) -> []; read_deps({error, enoent}, _) -> [].
+	[read_deps(dep_path(Dep, Path)) || Dep <- Deps] ++
+		[{dep_id(Dep), dep_path(Dep, Path)} || Dep <- Deps];
+read_deps(false, _) -> [];
+read_deps({error, enoent}, _) -> [].
+
+dep_id({Dep, _}) -> filename:basename(Dep);
+dep_id(Dep) -> filename:basename(Dep).
+
+dep_path({Dep, DepGit}, Path) -> load_dep(dep_path(Dep, Path), DepGit);
+dep_path(Dep, Path) -> filename:absname(Dep, Path).
+
+load_dep(DepPath, DepGit) ->
+	load_dep(file:read_file_info(DepPath), DepPath, DepGit).
+load_dep({ok, _}, DepPath, _) -> DepPath;
+load_dep(_, DepPath, DepGit) ->
+	os_cmd("git clone " ++ DepGit ++ " " ++ DepPath), DepPath.
 
 build(Path, OutPath, IncludePaths) ->
 	io:format("Building: ~p~n", [Path]),
