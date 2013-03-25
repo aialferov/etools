@@ -10,6 +10,7 @@ clean:
 install:
 	mkdir -p /usr/local/lib/emake/ebin
 	install -p ebin/emake.beam /usr/local/lib/emake/ebin
+	install -p priv/eapp /usr/local/bin
 	install -p priv/emake /usr/local/bin
 	install -p priv/etmpl /usr/local/bin
 	install -p -m 644 priv/emake_bash_completion /etc/bash_completion.d/emake
@@ -17,6 +18,7 @@ install:
 
 uninstall:
 	rm -f /usr/local/lib/emake/ebin/emake.beam
+	rm -f /usr/local/bin/eapp
 	rm -f /usr/local/bin/emake
 	rm -f /usr/local/bin/etmpl
 	rm -f /etc/bash_completion.d/emake

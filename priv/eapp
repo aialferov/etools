@@ -1,0 +1,41 @@
+#!/bin/bash
+
+name=$1
+example_name=$2
+
+if [ -z "$name" ]; then echo "Usage: eapp project [example]"; exit; fi
+
+if [ -z "$example_name" ]; then
+	for i in ebin examples src; do mkdir -p $name/$i; done
+
+	etmpl application $name > $name/ebin/$name.app
+	etmpl iface $name > $name/src/$name.erl
+	etmpl app $name > $name/src/$name""_app.erl
+	etmpl sup $name > $name/src/$name""_sup.erl
+	etmpl srv $name > $name/src/$name""_server.erl
+
+	echo "{deps, []}." > $name/Emakefile.em
+
+	cd $name/examples
+	eapp $name usage
+
+	exit
+fi
+
+for i in src priv; do mkdir -p $example_name/$i; done
+
+echo "\
+%% -*- coding: utf-8 -*-
+[{$name, []}].\
+" > $example_name/priv/$example_name.config
+
+echo "{deps, [\"../../../$name\"]}." > $example_name/Emakefile.em
+
+echo "\
+#!/bin/bash
+
+erl -pa ebin -pa deps/*/ebin -boot start_sasl \
+-config priv/$example_name -s $name\
+" > $example_name/start
+
+chmod +x $example_name/start

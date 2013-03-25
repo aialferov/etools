@@ -6,6 +6,7 @@ The following tools are provided:
 
  * etmpl
  * emake
+ * eapp
 
 ### Etmpl
 
@@ -14,6 +15,10 @@ Etmpl is a tool for generating Erlang module templates.
 ### Emake
 
 Emake builds an Erlang project with its dependencies.
+
+### Eapp
+
+Eapp creates a basic Erlang application.
 
 ## Build and install
 
