@@ -40,6 +40,14 @@ application_tmpl="\
 	]}}
 ]}."
 
+iface_tmpl="\
+-module($name).
+-export([start/0, stop/0]).
+
+start() -> application:start(?MODULE).
+stop() -> application:stop(?MODULE).
+"
+
 app_tmpl="\
 -module($name""_app"").
 -behaviour(application).
@@ -59,7 +67,7 @@ sup_tmpl="\
 start_link(Args) -> supervisor:start_link({local, ?MODULE}, ?MODULE, Args).
 
 init(Args) -> {ok, {{one_for_one, 1, 10}, [
-	{$name, {$name""_server"", start_link, Args},
+	{$name, {$name""_server"", start_link, [Args]},
 	permanent, 10, worker, [$name""_server""]}
 ]}}."
 
