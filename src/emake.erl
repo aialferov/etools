@@ -78,12 +78,15 @@ load_dep(_, DepPath, DepGit) ->
 	os_cmd("git clone " ++ DepGit ++ " " ++ DepPath), DepPath.
 
 build(Path, OutPath, IncludePaths) ->
-	io:format("Building: ~p~n", [Path]),
 	SrcPath = filename:join(Path, ?SrcDir),
-	{ok, SrcFiles} = file:list_dir(SrcPath),
+	build(file:list_dir(SrcPath), Path, SrcPath, OutPath, IncludePaths).
+build({ok, SrcFiles}, Path, SrcPath, OutPath, IncludePaths) ->
+	io:format("Building: ~p~n", [Path]),
 	SrcMods = [filename:join(SrcPath, filename:rootname(File)) ||
 		File <- SrcFiles, filename:extension(File) == ?SrcExt],
-	[compile_mod(SrcMod, OutPath, IncludePaths) || SrcMod <- SrcMods], ok.
+	[compile_mod(SrcMod, OutPath, IncludePaths) || SrcMod <- SrcMods], ok;
+build({error, enoent}, Path, _, _, _) ->
+	io:format("Nothing to do in ~p~n", [Path]).
 
 compile_mod(SrcMod, OutPath, IncludePaths) ->
 	filelib:ensure_dir(OutPath),
