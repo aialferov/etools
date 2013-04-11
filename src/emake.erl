@@ -65,11 +65,13 @@ read_deps({deps, Deps}, Path) ->
 read_deps(false, _) -> [];
 read_deps({error, enoent}, _) -> [].
 
-dep_id({Dep, _}) -> filename:basename(Dep);
-dep_id(Dep) -> filename:basename(Dep).
+dep_id({DepPath, _Options}) -> filename:basename(DepPath).
 
-dep_path({Dep, DepGit}, Path) -> load_dep(dep_path(Dep, Path), DepGit);
-dep_path(Dep, Path) -> filename:absname(Dep, Path).
+dep_path({DepPath, Options}, Path) ->
+	case lists:keyfind(git, 1, Options) of
+		{git, DepGit} -> load_dep(filename:absname(DepPath, Path), DepGit);
+		false -> filename:absname(DepPath, Path)
+	end.
 
 load_dep(DepPath, DepGit) ->
 	load_dep(file:read_file_info(DepPath), DepPath, DepGit).
