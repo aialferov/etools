@@ -55,22 +55,23 @@ read_deps() -> lists:reverse([Dep || {_ID, Dep} <- lists:foldl(
 	end end, [], lists:flatten(read_deps("."))
 )]).
 
-read_deps(Path) ->
-	read_deps(file:consult(filename:join(Path, ?ConfigFile)), Path).
-read_deps({ok, Config}, Path) ->
-	read_deps(lists:keyfind(deps, 1, Config), Path);
-read_deps({deps, Deps}, Path) ->
-	[read_deps(dep_path(Dep, Path)) || Dep <- Deps] ++
-		[{dep_id(Dep), dep_path(Dep, Path)} || Dep <- Deps];
+read_deps(ProjectPath) -> read_deps(file:consult(
+	filename:join(ProjectPath, ?ConfigFile)), ProjectPath).
+read_deps({ok, Deps}, ProjectPath) ->
+	[read_deps(dep_abs_path(Dep, ProjectPath)) || Dep <- Deps] ++
+		[{dep_id(Dep), prepare_dep(Dep, ProjectPath)} || Dep <- Deps];
 read_deps(false, _) -> [];
 read_deps({error, enoent}, _) -> [].
 
-dep_id({DepPath, _Options}) -> filename:basename(DepPath).
+dep_id({DepRelPath, _Options}) -> filename:basename(DepRelPath).
 
-dep_path({DepPath, Options}, Path) ->
+prepare_dep(Dep, ProjectPath) -> dep_abs_path(Dep, ProjectPath).
+
+dep_abs_path({DepRelPath, Options}, ProjectPath) ->
 	case lists:keyfind(git, 1, Options) of
-		{git, DepGit} -> load_dep(filename:absname(DepPath, Path), DepGit);
-		false -> filename:absname(DepPath, Path)
+		{git, DepGit} -> load_dep(filename:absname(
+			DepRelPath, ProjectPath), DepGit);
+		false -> filename:absname(DepRelPath, ProjectPath)
 	end.
 
 load_dep(DepPath, DepGit) ->
