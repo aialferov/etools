@@ -14,8 +14,6 @@ if [ -z "$example_name" ]; then
 	etmpl sup $name > $name/src/$name""_sup.erl
 	etmpl srv $name > $name/src/$name""_server.erl
 
-	echo "{deps, []}." > $name/Emakefile.em
-
 	cd $name/examples
 	eapp $name usage
 
@@ -29,7 +27,7 @@ echo "\
 [{$name, []}].\
 " > $example_name/priv/$example_name.config
 
-echo "{deps, [\"../../../$name\"]}." > $example_name/Emakefile.em
+echo "{\"../../../$name\", []}." > $example_name/Emakefile.em
 
 echo "\
 #!/bin/bash
