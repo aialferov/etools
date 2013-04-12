@@ -25,9 +25,9 @@
 ).
 
 all() ->
-	DepPaths = read_deps(),
-	IncludePaths = [filename:join(
-		DepPath, ?IncludeDir) || DepPath <- DepPaths],
+	{IncludeDepPaths, DepPaths} = read_deps(),
+	IncludePaths = [filename:join(DepPath, ?IncludeDir) ||
+		DepPath <- DepPaths ++ IncludeDepPaths],
 	[build(DepPath, filename:join([?DepsDir, filename:basename(DepPath),
 		?BinDir]), IncludePaths) || DepPath <- DepPaths],
 	[copy_app(DepPath, filename:join([?DepsDir,
@@ -49,11 +49,11 @@ clean(Path) ->
 os_cmd(Cmd) -> io:format("~p~n",
 	[{case os:cmd(Cmd) of [] -> ok; X -> X end, Cmd}]).
 
-read_deps() -> lists:reverse([Dep || {_ID, Dep} <- lists:foldl(
-	fun(Dep = {ID, _}, Deps) -> case lists:keyfind(ID, 1, Deps) of
-		{ID, _} -> Deps; false -> [Dep|Deps]
-	end end, [], lists:flatten(read_deps("."))
-)]).
+read_deps() ->
+	{RawIncludeDeps, RawDeps} = lists:partition(fun({_, {_, Flags}}) ->
+		lists:member(include, Flags) end, lists:flatten(read_deps("."))),
+	Deps = uniq(RawDeps),
+	{normalize_deps(substract(RawIncludeDeps, Deps)), normalize_deps(Deps)}.
 
 read_deps(ProjectPath) -> read_deps(file:consult(
 	filename:join(ProjectPath, ?ConfigFile)), ProjectPath).
@@ -63,9 +63,12 @@ read_deps({ok, Deps}, ProjectPath) ->
 read_deps(false, _) -> [];
 read_deps({error, enoent}, _) -> [].
 
+normalize_deps(Deps) -> [DepPath || {_, {DepPath, _}} <- Deps].
+
 dep_id({DepRelPath, _Options}) -> filename:basename(DepRelPath).
 
-prepare_dep(Dep, ProjectPath) -> dep_abs_path(Dep, ProjectPath).
+prepare_dep(Dep = {_DepRelPath, Options}, ProjectPath) ->
+	{dep_abs_path(Dep, ProjectPath), [Use || {use, Use} <- Options]}.
 
 dep_abs_path({DepRelPath, Options}, ProjectPath) ->
 	case lists:keyfind(git, 1, Options) of
@@ -115,3 +118,13 @@ copy_app_file(AppFile, OutPath) ->
 	filelib:ensure_dir(OutPath),
 	file:make_dir(filename:basename(OutPath)),
 	file:copy(AppFile, filename:join(OutPath, filename:basename(AppFile))).
+
+substract(L1, L2) ->
+	lists:dropwhile(fun({Key, _}) -> lists:keymember(Key, 1, L2) end, L1).
+
+uniq(L) -> uniq(L, []).
+uniq(L = [{Key, _}|_], Acc) -> uniq(lists:keymember(Key, 1, Acc), L, Acc);
+uniq([], Acc) -> lists:reverse(Acc).
+uniq(true, [_|T], Acc) -> uniq(T, Acc);
+uniq(false, [H|T], Acc) -> uniq(T, [H|Acc]);
+uniq(_, [], Acc) -> uniq([], Acc).
