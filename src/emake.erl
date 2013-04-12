@@ -8,9 +8,12 @@
 -module(emake).
 -export([all/0, clean/0, deepclean/0]).
 
+-include_lib("kernel/include/file.hrl").
+
 -define(ConfigFile, "Emakefile.em").
 
 -define(AppExt, ".app").
+-define(BinExt, ".beam").
 -define(SrcExt, ".erl").
 
 -define(DepsDir, "deps").
@@ -95,6 +98,31 @@ build({error, enoent}, Path, _, _, _) ->
 	io:format("Nothing to do in ~p~n", [Path]).
 
 compile_mod(SrcMod, OutPath, IncludePaths) ->
+	BinFile = filename:join(OutPath, filename:basename(SrcMod) ++ ?BinExt),
+	compile_mod(file:read_file_info(BinFile),
+		file:read_file_info(SrcMod ++ ?SrcExt), SrcMod, OutPath, IncludePaths).
+
+compile_mod(
+	{ok, #file_info{atime = BinTime}}, {ok, #file_info{atime = SrcTime}},
+	SrcMod, OutPath, IncludePaths
+) when SrcTime > BinTime -> c_mod(SrcMod, OutPath, IncludePaths);
+
+compile_mod(
+	{ok, #file_info{atime = BinTime}}, {ok, _},
+	SrcMod, OutPath, IncludePaths
+) ->
+	case lists:any(fun(IncludeFile) -> {ok, #file_info{atime = IncludeTime}} =
+		file:read_file_info(IncludeFile), IncludeTime > BinTime end,
+		lists:append([
+			[filename:join(Path, File) || File <- Files] || {Path, {ok, Files}}
+				<- [{Path, file:list_dir(Path)} || Path <- IncludePaths]
+		])
+	) of true -> c_mod(SrcMod, OutPath, IncludePaths); false -> ok end;
+
+compile_mod(_Error, _, SrcMod, OutPath, IncludePaths) ->
+	c_mod(SrcMod, OutPath, IncludePaths).
+
+c_mod(SrcMod, OutPath, IncludePaths) ->
 	filelib:ensure_dir(OutPath),
 	file:make_dir(OutPath),
 	CompileResult = compile:file(SrcMod,
