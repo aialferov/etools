@@ -135,8 +135,6 @@ copy_app(Path, OutPath) when is_list(Path) ->
 	BinPath = filename:join(Path, ?BinDir),
 	copy_app(file:list_dir(BinPath), BinPath, OutPath).
 copy_app({ok, BinFiles}, BinPath, OutPath) ->
-	[_, App|_] = lists:reverse(filename:split(BinPath)),
-	io:format("Copying app: ~p~n", [App]),
 	AppFiles = [filename:join(BinPath, File) ||
 		File <- BinFiles, filename:extension(File) == ?AppExt],
 	[copy_app_file(AppFile, OutPath) || AppFile <- AppFiles];
@@ -145,7 +143,23 @@ copy_app(Error, _, _) -> Error.
 copy_app_file(AppFile, OutPath) ->
 	filelib:ensure_dir(OutPath),
 	file:make_dir(filename:basename(OutPath)),
-	file:copy(AppFile, filename:join(OutPath, filename:basename(AppFile))).
+	OutFile = filename:join(OutPath, filename:basename(AppFile)),
+	copy_app_file(file:read_file_info(AppFile),
+		file:read_file_info(OutFile), AppFile, OutFile).
+
+copy_app_file(
+	{ok, #file_info{mtime = AppTime}},
+	{ok, #file_info{mtime = OutTime}}, AppFile, OutFile
+) when AppTime > OutTime -> copy_app_file({AppFile, OutFile});
+
+copy_app_file(_, {error, _}, AppFile, OutFile) ->
+	copy_app_file({AppFile, OutFile});
+
+copy_app_file(_, _, _, _) -> ok.
+
+copy_app_file({AppFile, OutFile}) ->
+	io:format("Copying: ~p~n", [filename:basename(AppFile)]),
+	file:copy(AppFile, OutFile).
 
 substract(L1, L2) ->
 	lists:dropwhile(fun({Key, _}) -> lists:keymember(Key, 1, L2) end, L1).
