@@ -103,15 +103,15 @@ compile_mod(SrcMod, OutPath, IncludePaths) ->
 		file:read_file_info(SrcMod ++ ?SrcExt), SrcMod, OutPath, IncludePaths).
 
 compile_mod(
-	{ok, #file_info{atime = BinTime}}, {ok, #file_info{atime = SrcTime}},
+	{ok, #file_info{mtime = BinTime}}, {ok, #file_info{mtime = SrcTime}},
 	SrcMod, OutPath, IncludePaths
 ) when SrcTime > BinTime -> c_mod(SrcMod, OutPath, IncludePaths);
 
 compile_mod(
-	{ok, #file_info{atime = BinTime}}, {ok, _},
+	{ok, #file_info{mtime = BinTime}}, {ok, _},
 	SrcMod, OutPath, IncludePaths
 ) ->
-	case lists:any(fun(IncludeFile) -> {ok, #file_info{atime = IncludeTime}} =
+	case lists:any(fun(IncludeFile) -> {ok, #file_info{mtime = IncludeTime}} =
 		file:read_file_info(IncludeFile), IncludeTime > BinTime end,
 		lists:append([
 			[filename:join(Path, File) || File <- Files] || {Path, {ok, Files}}
