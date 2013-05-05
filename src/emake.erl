@@ -49,8 +49,8 @@ clean(Path) ->
 	os_cmd("rm -f " ++ Path ++ "/" ++ ?BinDir ++ "/*.beam"),
 	os_cmd("rmdir --ignore-fail-on-non-empty " ++ Path ++ "/" ++ ?BinDir).
 
-os_cmd(Cmd) -> io:format("~p~n",
-	[{case os:cmd(Cmd) of [] -> ok; X -> X end, Cmd}]).
+os_cmd(Cmd) -> io:format("~s~n~s~n",
+	[Cmd, case os:cmd(Cmd) of [] -> "ok"; X -> X end]).
 
 read_deps() ->
 	{RawIncludeDeps, RawDeps} = lists:partition(fun({_, {_, Flags}}) ->
