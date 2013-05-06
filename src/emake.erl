@@ -49,8 +49,9 @@ clean(Path) ->
 	os_cmd("rm -f " ++ Path ++ "/" ++ ?BinDir ++ "/*.beam"),
 	os_cmd("rmdir --ignore-fail-on-non-empty " ++ Path ++ "/" ++ ?BinDir).
 
-os_cmd(Cmd) -> io:format("~s~n~s~n",
-	[Cmd, case os:cmd(Cmd) of [] -> "ok"; X -> X end]).
+os_cmd(Cmd) ->
+	Result = case os:cmd(Cmd) of [] -> "ok"; X -> X end,
+	io:format("~s~n~s~n", [Cmd, Result]), Result.
 
 read_deps() ->
 	{RawIncludeDeps, RawDeps} = lists:partition(fun({_, {_, Flags}}) ->
@@ -83,8 +84,17 @@ dep_abs_path({DepRelPath, Options}, ProjectPath) ->
 load_dep(DepPath, DepGit) ->
 	load_dep(file:read_file_info(DepPath), DepPath, DepGit).
 load_dep({ok, _}, DepPath, _) -> DepPath;
-load_dep(_, DepPath, DepGit) ->
-	os_cmd("git clone " ++ DepGit ++ " " ++ DepPath), DepPath.
+load_dep(_, DepPath, DepGit) -> git_clone(DepGit, DepPath).
+
+git_clone([DepGitH|DepGitT], DepPath) -> git_clone(git_clone_result(
+	os_cmd("git clone " ++ DepGitH ++ " " ++ DepPath)), DepGitT, DepPath);
+git_clone([], DepPath) -> DepPath.
+git_clone(fatal, DepGit, DepPath) -> git_clone(DepGit, DepPath);
+git_clone(ok, _DepGit, DepPath) -> DepPath.
+
+git_clone_result("fatal:" ++ _) -> fatal;
+git_clone_result([_|T]) -> git_clone_result(T);
+git_clone_result([]) -> ok.
 
 build(Path, OutPath, IncludePaths) ->
 	SrcPath = filename:join(Path, ?SrcDir),
