@@ -97,14 +97,16 @@ fsm_tmpl="\
 -module($name).
 -behaviour(gen_fsm).
 
--export([start_link/0]).
+-export([start_link/1]).
 
--export([init/1, state_name/2, state_name/3, handle_event/3,
-	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
+-export([state_name/2, state_name/3]).
 
-start_link() -> gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
+-export([init/1, terminate/3, code_change/4]).
+-export([handle_event/3, handle_sync_event/4, handle_info/3]).
 
-init([]) -> {ok, state_name, []}.
+start_link(Args) -> gen_fsm:start_link({local, ?MODULE}, ?MODULE, Args, []).
+
+init(_Args) -> {ok, state_name, []}.
 
 state_name(_Event, State) ->
     {next_state, state_name, State}.
