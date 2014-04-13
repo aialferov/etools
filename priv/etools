@@ -1,0 +1,15 @@
+#!/usr/bin/escript
+%%! -pa ebin
+
+main(["template", Type, Name|Options]) ->
+	etools_template:make(list_to_atom(Type), Name, options(Options));
+
+main(["tmpl", TmplName|Options]) ->
+	display(etools_tmpl:make(TmplName, options(Options))).
+
+options(Options) -> [
+	{Name, Value} || Option <- Options,
+	[Name, Value] <- [string:tokens(Option, "=")]
+].
+
+display(Text) -> io:format("~s", [Text]).
