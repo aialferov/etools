@@ -1,5 +1,5 @@
 #!/usr/bin/escript
-%%! -smp enable
+%%! -smp enable -pa /usr/local/lib/emake/ebin
 
 main([]) -> emake:all();
 main(["clean"]) -> emake:clean();

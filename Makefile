@@ -13,7 +13,6 @@ install:
 	install -p priv/eapp /usr/local/bin
 	install -p priv/emake /usr/local/bin
 	install -p priv/etmpl /usr/local/bin
-	install -p -m 644 priv/emake_env.sh /etc/profile.d
 	install -p -m 644 priv/emake_bash_completion /etc/bash_completion.d/emake
 	install -p -m 644 priv/etmpl_bash_completion /etc/bash_completion.d/etmpl
 
@@ -22,7 +21,6 @@ uninstall:
 	rm -f /usr/local/bin/eapp
 	rm -f /usr/local/bin/emake
 	rm -f /usr/local/bin/etmpl
-	rm -f /etc/profile.d/emake_env.sh
 	rm -f /etc/bash_completion.d/emake
 	rm -f /etc/bash_completion.d/etmpl
 	rmdir --ignore-fail-on-non-empty -p /usr/local/lib/emake/ebin
