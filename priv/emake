@@ -1,4 +1,4 @@
-#!/usr/bin/escript
+#!/usr/bin/env escript
 %%! -smp enable -pa /usr/local/lib/emake/ebin
 
 main([]) -> emake:all();
