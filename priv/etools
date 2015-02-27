@@ -1,5 +1,28 @@
-#!/usr/bin/escript
-%%! -pa ebin
+#!/usr/bin/env escript
+%%! -pa /usr/local/lib/etools/ebin ebin
+
+% etools template gen_server test
+% etools template application test
+
+% etools file gen_server test
+% etools file application test
+
+% etools project library test
+% etools project application test
+
+% etools build
+
+% etools check
+
+% etools start
+% etools stop
+
+% etools join
+
+% etools service [name] start
+% etools service [name] stop
+
+% etools pack
 
 main(["template", Type, Name|Options]) ->
 	etools_template:make(list_to_atom(Type), Name, options(Options));
