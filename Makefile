@@ -4,7 +4,7 @@ all:
 	erlc -o ebin/ src/*.erl
 
 clean:
-	rm -f ebin/emake.beam
+	rm -f ebin/*.beam
 	rmdir --ignore-fail-on-non-empty -p ebin
 
 install:
@@ -24,3 +24,6 @@ uninstall:
 	rm -f /etc/bash_completion.d/emake
 	rm -f /etc/bash_completion.d/etmpl
 	rmdir --ignore-fail-on-non-empty -p /usr/local/lib/emake/ebin
+
+run:
+	erl -pa /usr/local/lib/emake/ebin ebin
