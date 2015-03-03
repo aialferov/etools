@@ -26,12 +26,7 @@ read_file_binary(Binary, LineSep) ->
 		Stripped <- [strip_after(Token, ?Comment)], Stripped =/= []
 	].
 
-split_kv(Kv, Sep) -> split_kv(Kv, [], Sep).
-split_kv([Sep|T], Acc, Sep) -> {lists:reverse(Acc), T};
-split_kv([H|T], Acc, Sep) -> split_kv(T, [H|Acc], Sep);
-split_kv([], Acc, _Sep) -> {lists:reverse(Acc), []}.
+split_kv(Kv, Sep) ->
+	{K, [Sep|V]} = lists:splitwith(fun(X) -> X =/= Sep end, Kv), {K, V}.
 
-strip_after(List, Char) -> strip_after(List, Char, []).
-strip_after([Char|_], Char, Acc) -> lists:reverse(Acc);
-strip_after([H|T], Char, Acc) -> strip_after(T, Char, [H|Acc]);
-strip_after([], _Char, Acc) -> lists:reverse(Acc).
+strip_after(List, Char) -> lists:takewhile(fun(X) -> X =/= Char end, List).
