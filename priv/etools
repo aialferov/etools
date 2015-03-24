@@ -24,6 +24,8 @@
 
 % etools pack
 
+% etools git
+
 main(["template", Type, Name|Options]) ->
 	etools_template:make(list_to_atom(Type), Name, options(Options));
 
