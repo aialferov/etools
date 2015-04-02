@@ -1,41 +1,14 @@
 %%%-------------------------------------------------------------------
-%%% @author Anton I Alferov casper@sbsn
-%%% @copyright (C) 2014, Anton I Alferov
+%%% @author Anton I Alferov <casper@alferov.me>
+%%% @copyright (C) 2015, Anton I Alferov
 %%%
-%%% Created: 24 Mar 2014 by Anton I Alferov casper@sbsn
+%%% Created: 24 Mar 2015 by Anton I Alferov <casper@alferov.me>
 %%%-------------------------------------------------------------------
 
--module(etools_template).
--export([make/3]).
+-module(etools_template_file).
+-export([build/4]).
 
--define(SrcDir, "src").
+build(Dir, Name, Vars, FileName) ->
+	file:write_file(FileName, format(etools_template1:build(Dir, Name, Vars))).
 
--define(TmplNames(Type), case Type of
-	app -> ["app_src", "interface", "application", "supervisor", "gen_server"];
-	lib -> ["lib_src", "interface"];
-	rel -> ["lib_src", "interface"]
-end).
-
--define(FileNameSuffix(TmplName), case TmplName of
-	"application" -> "_app";
-	"supervisor" -> "_sup";
-	"gen_server" -> "_server";
-	_ -> ""
-end).
-
--define(FileExt(TmplName), case TmplName of
-	TmplName when TmplName == "app_src"; TmplName == "lib_src" -> ".app.src";
-	_ -> ".erl"
-end).
-
--define(FileName(TmplName, Name),
-	Name ++ ?FileNameSuffix(TmplName) ++ ?FileExt(TmplName)).
-
-make(Type, Name, Options) ->
-	filelib:ensure_dir(filename:join(Name, ?SrcDir) ++ "/"),
-	[from_tmpl(TmplName, Name, Options) || TmplName <- ?TmplNames(Type)].
-
-from_tmpl(TmplName, Name, Options) -> file:write_file(
-	filename:join([Name, ?SrcDir, ?FileName(TmplName, Name)]),
-	etools_tmpl:make(TmplName, [{name, Name}|Options])
-).
+format(Text) -> lists:flatten(io_lib:format("~s~n", [Text])).
