@@ -53,7 +53,7 @@ read_var_names(Content) ->
 	end.
 
 droplast(List, Char) ->
-	IsCharLast = string:right(List, 1) == [Char],
+	IsCharLast = string:suffix([Char], List),
 	if IsCharLast -> droplast(List); true -> List end.
 
 droplast(List) -> string:left(List, length(List) - 1).
