@@ -5,7 +5,7 @@
 %%% Created: 15 Mar 2015 by Anton I Alferov <casper@alferov.me>
 %%%-------------------------------------------------------------------
 
--module(etools_template1).
+-module(etools_template_backend).
 -export([build/3]).
 
 -define(Utils, etools_utils).
