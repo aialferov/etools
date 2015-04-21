@@ -32,39 +32,35 @@ build_project(Dir, Parent, Children, VarSpecs, Origin) ->
 	BuildModule = fun(TemplateName) ->
 		build_template(Dir, TemplateName, VarSpecs, Origin)
 	end,
-	BuildProject = fun(ChildParent, ChildChildren) ->
+	BuildProject = fun({ChildParent, ChildChildren}) ->
 		build_project(Dir, ChildParent, ChildChildren, VarSpecs, Origin)
 	end,
 	BuildItem = fun(Path, Template) ->
 		{filename:join(Parent, Path), Template}
 	end,
-	foldlwhile(fun build_project_item/3, [],
-		{BuildFileName, BuildModule, BuildProject, BuildItem}, Children).
+	foldlwhile(fun build_project_item/3, [], Children,
+		{BuildFileName, BuildModule, BuildProject, BuildItem}).
 
 build_project_item(
 	{FileNameTemplate, TemplateName = [H|_]}, Tree,
-	Builders = {BuildFileName, BuildModule, _BuildProject, BuildItem}
-) when is_number(H) ->
-	case BuildFileName(FileNameTemplate) of
-		{ok, {_, FileName}} ->
-			case BuildModule(TemplateName) of
-				{ok, {_, Template}} ->
-					{ok, Tree ++ [BuildItem(FileName, Template)], Builders};
-				Error -> Error
-			end;
-		Error -> Error
-	end;
+	{BuildFileName, BuildModule, _BuildProject, BuildItem}
+) when is_number(H) -> dowhile([
+	{filename, BuildFileName, [FileNameTemplate]},
+	{template, BuildModule, [TemplateName]},
+	{tree, fun({_, FileName}, {_, Template}) ->
+		{ok, Tree ++ [BuildItem(FileName, Template)]}
+	end, [{filename}, {template}]}
+]);
 
 build_project_item(
 	{ChildParent, ChildChildren}, Tree,
-	Builders = {_BuildFileName, _BuildModule, BuildProject, BuildItem}
-) ->
-	case BuildProject(ChildParent, ChildChildren) of
-		{ok, ChildTree} ->
-			{ok, Tree ++ [BuildItem(Path, Template) ||
-				{Path, Template} <- ChildTree], Builder};
-		Error -> Error
-	end.
+	{_BuildFileName, _BuildModule, BuildProject, BuildItem}
+) -> dowhile([
+	{project, BuildProject, [{ChildParent, ChildChildren}]},
+	{tree, fun(ChildTree) ->
+		{ok, Tree ++ [BuildItem(Path, Template) || {Path, Template} <- ChildTree]}
+	end, [{project}]}
+]).
 
 build_template(Dir, Name, VarSpecs) ->
 	build_template(Dir, Name, VarSpecs, Dir).
@@ -95,14 +91,13 @@ build_template(Dir, Name, Content, VarSpecs, Origin) ->
 build_template(Content, Vars) -> lists:foldl(fun ?Utils:sub/2, Content, Vars).
 
 build_vars(TemplateDir, VarNames, VarSpecs, Origin) ->
-	foldlwhile(fun update_vars/3, [],
-		build_var_fun(TemplateDir, VarSpecs, Origin), VarNames).
+	foldlwhile(fun build_var_into/3, [], VarNames,
+		build_var_fun(TemplateDir, VarSpecs, Origin)).
 
-update_vars(VarName, Vars, BuildVar) ->
-	case BuildVar(VarName) of
-		{ok, Var} -> {ok, [Var|Vars], BuildVar};
-		Error -> Error
-	end.
+build_var_into(VarName, Vars, BuildVarFun) -> dowhile([
+	{build, BuildVarFun, [VarName]},
+	{add, fun(Var) -> {ok, [Var|Vars]} end, [{build}]}
+]).
 
 build_var_fun(TemplateDir, VarSpecs, Origin) ->
 	fun(VarName) -> build_var(TemplateDir, VarName, VarSpecs, Origin) end.
@@ -120,14 +115,29 @@ read_var_names(Content) ->
 		nomatch -> []
 	end.
 
-foldlwhile(Fun, Acc0, Tmp0, List) ->
-	foldlwhile(lists:foldl(fun
-		(X, {ok, Acc, Tmp}) -> Fun(X, Acc, Tmp);
-		(_, Error = {error, _}) -> Error
-	end, {ok, Acc0, Tmp0}, List)).
+dowhile([]) -> false;
+dowhile(Funs) -> {_Id, Result} = hd(lists:foldl(fun do/2, [], Funs)), Result.
 
-foldlwhile({ok, Acc, _F}) -> {ok, Acc};
-foldlwhile(Error) -> Error.
+do(_FunSpec, Results = [{_Id, {error, _Reason}}|_]) -> Results;
+do({Id, Fun, ArgSpecs}, Results) ->
+	case apply(Fun, do_args(ArgSpecs, Results)) of
+		ok -> [{Id, ok}|Results];
+		{ok, Result} -> [{Id, {ok, Result}}|Results];
+		Error = {error, _} -> [{Id, Error}|Results]
+	end.
+
+do_args(ArgSpecs, Results) ->
+	[do_arg(ArgSpec, Results) || ArgSpec <- ArgSpecs].
+
+do_arg({Id}, Results) when is_atom(Id) ->
+	case lists:keyfind(Id, 1, Results) of {Id, {ok, Result}} -> Result end;
+do_arg(ArgSpec, _Results) -> ArgSpec.
+
+foldlwhile(Fun, Acc0, List, Tmp) ->
+	lists:foldl(fun
+		(X, {ok, Acc}) -> Fun(X, Acc, Tmp);
+		(_, Error = {error, _}) -> Error
+	end, {ok, Acc0}, List).
 
 droplast(List, Char) ->
 	IsCharLast = lists:suffix([Char], List),
